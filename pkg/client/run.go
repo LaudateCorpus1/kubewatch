@@ -22,6 +22,7 @@ import (
 	"github.com/bitnami-labs/kubewatch/config"
 	"github.com/bitnami-labs/kubewatch/pkg/controller"
 	"github.com/bitnami-labs/kubewatch/pkg/handlers"
+	"github.com/bitnami-labs/kubewatch/pkg/handlers/discord"
 	"github.com/bitnami-labs/kubewatch/pkg/handlers/flock"
 	"github.com/bitnami-labs/kubewatch/pkg/handlers/hipchat"
 	"github.com/bitnami-labs/kubewatch/pkg/handlers/mattermost"
@@ -57,6 +58,8 @@ func ParseEventHandler(conf *config.Config) handlers.Handler {
 		eventHandler = new(msteam.MSTeams)
 	case len(conf.Handler.SMTP.Smarthost) > 0 || len(conf.Handler.SMTP.To) > 0:
 		eventHandler = new(smtp.SMTP)
+	case len(conf.Handler.Discord.Webhook) > 0:
+		eventHandler = new(discord.Discord)
 	default:
 		eventHandler = new(handlers.Default)
 	}
