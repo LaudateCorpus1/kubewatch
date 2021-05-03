@@ -3,6 +3,7 @@ module github.com/bitnami-labs/kubewatch
 go 1.14
 
 require (
+	github.com/andersfylling/snowflake v1.3.0
 	github.com/fatih/structtag v1.2.0
 	github.com/fsnotify/fsnotify v1.4.9 // indirect
 	github.com/golang/groupcache v0.0.0-20200121045136-8c9f03a8e57e // indirect
