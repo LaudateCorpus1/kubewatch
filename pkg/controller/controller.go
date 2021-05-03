@@ -210,7 +210,7 @@ func Start(conf *config.Config, eventHandler handlers.Handler) {
 			cache.Indexers{},
 		)
 
-		c := newResourceController(kubeClient, eventHandler, informer, "daemon set")
+		c := newResourceController(kubeClient, eventHandler, informer, "daemon set", conf)
 		stopCh := make(chan struct{})
 		defer close(stopCh)
 
@@ -232,7 +232,7 @@ func Start(conf *config.Config, eventHandler handlers.Handler) {
 			cache.Indexers{},
 		)
 
-		c := newResourceController(kubeClient, eventHandler, informer, "replica set")
+		c := newResourceController(kubeClient, eventHandler, informer, "replica set", conf)
 		stopCh := make(chan struct{})
 		defer close(stopCh)
 
@@ -320,7 +320,7 @@ func Start(conf *config.Config, eventHandler handlers.Handler) {
 			cache.Indexers{},
 		)
 
-		c := newResourceController(kubeClient, eventHandler, informer, "replication controller")
+		c := newResourceController(kubeClient, eventHandler, informer, "replication controller", conf)
 		stopCh := make(chan struct{})
 		defer close(stopCh)
 
@@ -386,7 +386,7 @@ func Start(conf *config.Config, eventHandler handlers.Handler) {
 			cache.Indexers{},
 		)
 
-		c := newResourceController(kubeClient, eventHandler, informer, "service account")
+		c := newResourceController(kubeClient, eventHandler, informer, "service account", conf)
 		stopCh := make(chan struct{})
 		defer close(stopCh)
 
@@ -408,7 +408,7 @@ func Start(conf *config.Config, eventHandler handlers.Handler) {
 			cache.Indexers{},
 		)
 
-		c := newResourceController(kubeClient, eventHandler, informer, "cluster role")
+		c := newResourceController(kubeClient, eventHandler, informer, "cluster role", conf)
 		stopCh := make(chan struct{})
 		defer close(stopCh)
 
@@ -430,7 +430,7 @@ func Start(conf *config.Config, eventHandler handlers.Handler) {
 			cache.Indexers{},
 		)
 
-		c := newResourceController(kubeClient, eventHandler, informer, "persistent volume")
+		c := newResourceController(kubeClient, eventHandler, informer, "persistent volume", conf)
 		stopCh := make(chan struct{})
 		defer close(stopCh)
 
