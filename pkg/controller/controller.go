@@ -639,7 +639,7 @@ func (c *Controller) processItem(newEvent Event) error {
 	}
 
 	for _, val := range c.config.Ignores {
-		if strings.Contains(objectMeta.Name, val) {
+		if strings.Contains(objectMeta.Name, val) || strings.Contains(newEvent.key, val) {
 			return nil
 		}
 	}
