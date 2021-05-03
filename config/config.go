@@ -76,6 +76,9 @@ type Config struct {
 	// Resources to watch.
 	Resource Resource `json:"resource"`
 
+	// Ignore certain phrases from alerts
+	Ignores []string `json:"ignores"`
+
 	// For watching specific namespace, leave it empty for watching all.
 	// this config is ignored when watching namespaces
 	Namespace string `json:"namespace,omitempty"`

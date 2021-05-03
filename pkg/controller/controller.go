@@ -65,6 +65,7 @@ type Controller struct {
 	queue        workqueue.RateLimitingInterface
 	informer     cache.SharedIndexInformer
 	eventHandler handlers.Handler
+	config       *config.Config
 }
 
 // Start prepares watchers and run their controllers, then waits for process termination signals
@@ -95,7 +96,7 @@ func Start(conf *config.Config, eventHandler handlers.Handler) {
 		cache.Indexers{},
 	)
 
-	nodeNotReadyController := newResourceController(kubeClient, eventHandler, nodeNotReadyInformer, "NodeNotReady")
+	nodeNotReadyController := newResourceController(kubeClient, eventHandler, nodeNotReadyInformer, "NodeNotReady", conf)
 	stopNodeNotReadyCh := make(chan struct{})
 	defer close(stopNodeNotReadyCh)
 
@@ -118,7 +119,7 @@ func Start(conf *config.Config, eventHandler handlers.Handler) {
 		cache.Indexers{},
 	)
 
-	nodeReadyController := newResourceController(kubeClient, eventHandler, nodeReadyInformer, "NodeReady")
+	nodeReadyController := newResourceController(kubeClient, eventHandler, nodeReadyInformer, "NodeReady", conf)
 	stopNodeReadyCh := make(chan struct{})
 	defer close(stopNodeReadyCh)
 
@@ -141,7 +142,7 @@ func Start(conf *config.Config, eventHandler handlers.Handler) {
 		cache.Indexers{},
 	)
 
-	nodeRebootedController := newResourceController(kubeClient, eventHandler, nodeRebootedInformer, "NodeRebooted")
+	nodeRebootedController := newResourceController(kubeClient, eventHandler, nodeRebootedInformer, "NodeRebooted", conf)
 	stopNodeRebootedCh := make(chan struct{})
 	defer close(stopNodeRebootedCh)
 
@@ -163,7 +164,7 @@ func Start(conf *config.Config, eventHandler handlers.Handler) {
 			cache.Indexers{},
 		)
 
-		c := newResourceController(kubeClient, eventHandler, informer, "pod")
+		c := newResourceController(kubeClient, eventHandler, informer, "pod", conf)
 		stopCh := make(chan struct{})
 		defer close(stopCh)
 
@@ -186,7 +187,7 @@ func Start(conf *config.Config, eventHandler handlers.Handler) {
 			cache.Indexers{},
 		)
 
-		backoffcontroller := newResourceController(kubeClient, eventHandler, backoffInformer, "Backoff")
+		backoffcontroller := newResourceController(kubeClient, eventHandler, backoffInformer, "Backoff", conf)
 		stopBackoffCh := make(chan struct{})
 		defer close(stopBackoffCh)
 
@@ -253,7 +254,7 @@ func Start(conf *config.Config, eventHandler handlers.Handler) {
 			cache.Indexers{},
 		)
 
-		c := newResourceController(kubeClient, eventHandler, informer, "service")
+		c := newResourceController(kubeClient, eventHandler, informer, "service", conf)
 		stopCh := make(chan struct{})
 		defer close(stopCh)
 
@@ -275,7 +276,7 @@ func Start(conf *config.Config, eventHandler handlers.Handler) {
 			cache.Indexers{},
 		)
 
-		c := newResourceController(kubeClient, eventHandler, informer, "deployment")
+		c := newResourceController(kubeClient, eventHandler, informer, "deployment", conf)
 		stopCh := make(chan struct{})
 		defer close(stopCh)
 
@@ -297,7 +298,7 @@ func Start(conf *config.Config, eventHandler handlers.Handler) {
 			cache.Indexers{},
 		)
 
-		c := newResourceController(kubeClient, eventHandler, informer, "namespace")
+		c := newResourceController(kubeClient, eventHandler, informer, "namespace", conf)
 		stopCh := make(chan struct{})
 		defer close(stopCh)
 
@@ -341,7 +342,7 @@ func Start(conf *config.Config, eventHandler handlers.Handler) {
 			cache.Indexers{},
 		)
 
-		c := newResourceController(kubeClient, eventHandler, informer, "job")
+		c := newResourceController(kubeClient, eventHandler, informer, "job", conf)
 		stopCh := make(chan struct{})
 		defer close(stopCh)
 
@@ -363,7 +364,7 @@ func Start(conf *config.Config, eventHandler handlers.Handler) {
 			cache.Indexers{},
 		)
 
-		c := newResourceController(kubeClient, eventHandler, informer, "node")
+		c := newResourceController(kubeClient, eventHandler, informer, "node", conf)
 		stopCh := make(chan struct{})
 		defer close(stopCh)
 
@@ -451,7 +452,7 @@ func Start(conf *config.Config, eventHandler handlers.Handler) {
 			cache.Indexers{},
 		)
 
-		c := newResourceController(kubeClient, eventHandler, informer, "secret")
+		c := newResourceController(kubeClient, eventHandler, informer, "secret", conf)
 		stopCh := make(chan struct{})
 		defer close(stopCh)
 
@@ -473,7 +474,7 @@ func Start(conf *config.Config, eventHandler handlers.Handler) {
 			cache.Indexers{},
 		)
 
-		c := newResourceController(kubeClient, eventHandler, informer, "configmap")
+		c := newResourceController(kubeClient, eventHandler, informer, "configmap", conf)
 		stopCh := make(chan struct{})
 		defer close(stopCh)
 
@@ -495,7 +496,7 @@ func Start(conf *config.Config, eventHandler handlers.Handler) {
 			cache.Indexers{},
 		)
 
-		c := newResourceController(kubeClient, eventHandler, informer, "ingress")
+		c := newResourceController(kubeClient, eventHandler, informer, "ingress", conf)
 		stopCh := make(chan struct{})
 		defer close(stopCh)
 
@@ -508,7 +509,7 @@ func Start(conf *config.Config, eventHandler handlers.Handler) {
 	<-sigterm
 }
 
-func newResourceController(client kubernetes.Interface, eventHandler handlers.Handler, informer cache.SharedIndexInformer, resourceType string) *Controller {
+func newResourceController(client kubernetes.Interface, eventHandler handlers.Handler, informer cache.SharedIndexInformer, resourceType string, config *config.Config) *Controller {
 	queue := workqueue.NewRateLimitingQueue(workqueue.DefaultControllerRateLimiter())
 	var newEvent Event
 	var err error
@@ -549,6 +550,7 @@ func newResourceController(client kubernetes.Interface, eventHandler handlers.Ha
 		informer:     informer,
 		queue:        queue,
 		eventHandler: eventHandler,
+		config:       config,
 	}
 }
 
@@ -634,6 +636,12 @@ func (c *Controller) processItem(newEvent Event) error {
 		substring := strings.Split(newEvent.key, "/")
 		newEvent.namespace = substring[0]
 		newEvent.key = substring[1]
+	}
+
+	for _, val := range c.config.Ignores {
+		if strings.Contains(objectMeta.Name, val) {
+			return nil
+		}
 	}
 
 	// process events based on its type
